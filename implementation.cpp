@@ -51,6 +51,66 @@ string binary_to_boolean_expression(string str){
     return result;
 }
 
+bool isCombiningPossible(string a, string b, string &result) {
+    int count = 0;
+    result = a;
+    for (int i = 0; i < a.size(); i++) {
+        if (a[i] != b[i]) {
+            count++;
+            result[i] = '-';
+        }
+        if (count > 1) return false;
+    }
+    return true;
+}
+
+bool next_optimization(map<int,vector<pair<vector<int>,string>>> &groups){
+    map<int,vector<pair<vector<int>,string>>> new_group;
+    bool optimization_happened=false;
+    for(auto curr=groups.begin();curr!=groups.end();curr++){
+        auto next=curr;
+        next++;
+        if(next==groups.end()){
+            break;
+        }
+
+        for(auto p:curr->second){
+            for(auto np:next->second){
+                string result;
+                if (isCombiningPossible(p.second, np.second, result)) {
+                    optimization_happened=true;
+                    vector<int>v;
+                    for(int i=0;i<p.first.size();i++){
+                        v.push_back(p.first[i]);
+                    }
+                    for(int i=0;i<np.first.size();i++){
+                        v.push_back(np.first[i]);
+                    }
+                    new_group[curr->first].push_back({v,result});
+                }
+            }
+        }
+    }
+    groups=new_group;
+    return optimization_happened;
+}
+
+void print_groups(map<int,vector<pair<vector<int>,string>>> &groups){
+    for(auto grp : groups){
+        cout<<"Group "<<grp.first<<":- ";
+        cout<<endl;
+        for(auto str:grp.second){
+            for(int i=0;i<str.first.size();i++){
+                cout<<str.first[i]<<",";
+            }
+
+            cout<<" : "<<str.second<<endl;
+        }
+    }
+
+    cout<<"--------------------------------------------------------------------------------------------"<<endl;
+}
+
 int main(){
 
     int variables;   //number of variables such as (a,b,c,d)=>4.
@@ -88,19 +148,14 @@ int main(){
     }
 
     //Forming groups according to number of one's
-    map<int,vector<pair<int,string>>>groups;
+    map<int,vector<pair<vector<int>,string>>>groups;
     for(int num:Terms){
         string binaryForm = convert_to_binary(num,variables);
         int count=ones_count(binaryForm);
-        groups[count].push_back({num,binaryForm});
+        vector<int>v(1,num);
+        groups[count].push_back({v,binaryForm});
     }
-
-    for(auto grp : groups){
-        cout<<"Group "<<grp.first<<":- ";
-        cout<<endl;
-        for(auto str:grp.second){
-            cout<<str.first<<" : "<<str.second<<endl;
-        }
-        cout<<endl;
-    }
+    print_groups(groups);
+    next_optimization(groups);
+    print_groups(groups);
 }
